@@ -2,7 +2,7 @@ SRC_DIR = src
 BUILD_DIR = build
 PROGRAM_NAME = main
 GCC = g++
-FLAGS = -o $(BUILD_DIR)/$(PROGRAM_NAME) -lpcap -L/usr/include/pcap -v
+FLAGS = -o $(BUILD_DIR)/$(PROGRAM_NAME) -lpcap -L/usr/include/pcap
 
 build: clean
 	mkdir $(BUILD_DIR); \
