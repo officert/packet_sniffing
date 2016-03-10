@@ -5,11 +5,12 @@
 using namespace std;
 
 //function prototypes
-pcap_t& create_session(const char *device);
+pcap_t* create_session(const char *device);
 
 int main(int argc, char *argv[])
 {
 	char *device = argv[1];
+	pcap_t* session_handle;
 
 	if (device == NULL)
 	{
@@ -18,14 +19,24 @@ int main(int argc, char *argv[])
 	 return(1);
 	}
 
-	pcap_t& session_handle = create_session(device);
+	try {
+		session_handle = create_session(device);
+	} catch (const char* exception) {
+		cout << "Error, " << exception << endl;
+	}
+
+	if (session_handle == NULL) {
+		cout << "Error creating pcap session" << endl;
+
+		return(1);
+	}
 
 	printf("Device: %s\n", device);
 
 	return(0);
 }
 
-pcap_t& create_session(const char *device) {
+pcap_t* create_session(const char *device) {
 	int buffer_size = BUFSIZ;
 	int promisc = 1;
 	int to_ms = 1000;
@@ -57,5 +68,5 @@ pcap_t& create_session(const char *device) {
 		throw "Couldn't install filter %s: %s\n", pcap_geterr(session);
 	}
 
-	return *session;
+	return session;
 }
