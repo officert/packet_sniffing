@@ -7,7 +7,7 @@
 using namespace std;
 
 //function prototypes
-void get_device_name(const char *device, bpf_u_int32 mask, bpf_u_int32 net, char *error_buffer);
+char* get_device_name(const char *device);
 void log(const char *message);
 pcap_t* create_session(const char *device);
 void sniff_session(pcap_t *session);
@@ -41,13 +41,28 @@ void Sniffer::sniff(const char *device)
   return;
 }
 
-void get_device_name(const char *device, bpf_u_int32 mask, bpf_u_int32 net, char *error_buffer)
+char* get_device_name(const char *device)
 {
-  if (device == NULL) {
-    if (pcap_lookupnet(device, &net, &mask, error_buffer) == -1)
+  char *device_name;
+
+  char *error_buffer;
+
+  if (device == NULL)
+  {
+    cout << "\nLooking up device...\n" << endl;
+
+    device_name = pcap_lookupdev(error_buffer);
+
+    if (device_name == NULL)
     {
-      fprintf(stderr, "Can't get netmask for device %s\n", device);
+      cout << error_buffer << endl;
     }
+
+    return device_name;
+  } else {
+    device_name = strdup(device);
+
+    return device_name;
   }
 }
 
@@ -63,20 +78,20 @@ pcap_t* create_session(const char *device)
   bpf_u_int32 mask;		/* The netmask of our sniffing device */
   bpf_u_int32 net;		/* The IP of our sniffing device */
 
-  get_device_name(device, mask, net, error_buffer);
+  char *device_name = get_device_name(device);
 
-  fancy_printf("Device Name %s\n", device);
+  fancy_printf("Device Name %s\n", device_name);
   fancy_printf("Net %s\n", net);
   fancy_printf("Mask %s\n", mask);
 
-  if(device == NULL)
+  if(device_name == NULL)
   {
     throw "Error, could not get device name";
   }
 
-  printf("\nUsing device: %s\n", device);
+  printf("\nUsing device: %s\n", device_name);
 
-	pcap_t* session = pcap_open_live(device, buffer_size, promisc, to_ms, error_buffer);
+	pcap_t* session = pcap_open_live(device_name, buffer_size, promisc, to_ms, error_buffer);
 
 	if (session == NULL)
 	{
