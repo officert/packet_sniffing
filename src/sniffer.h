@@ -4,7 +4,7 @@
 class Sniffer
 {
 public:
-  void sniff(const char *device);
+  void sniff(const char *device, const int num_packets);
 };
 
 #endif
