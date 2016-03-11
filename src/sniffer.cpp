@@ -1,3 +1,6 @@
+/* default snap length (maximum bytes per packet to capture) */
+#define SNAP_LEN 1518
+
 #include <iostream>
 #include <pcap.h>
 #include <stdio.h>
@@ -10,13 +13,13 @@ using namespace std;
 char* get_device_name(const char *device);
 void log(const char *message);
 pcap_t* create_session(const char *device);
-void sniff_session(pcap_t *session);
+void sniff_session(pcap_t *session, int num_packets);
 void fancy_printf(char* fmt, ...);
 void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-
 void Sniffer::sniff(const char *device)
 {
   pcap_t* session_handle;
+  int num_packets = 10; //number of packets to capture
 
   try {
 		session_handle = create_session(device);
@@ -31,10 +34,11 @@ void Sniffer::sniff(const char *device)
 		return;
 	}
 
-	printf("\nSniffing on device: %s\n", device);
+	fancy_printf("Sniffing on device: %s\n", device);
+	fancy_printf("Number of packets: %d\n", num_packets);
 
 	try {
-		sniff_session(session_handle);
+		sniff_session(session_handle, num_packets);
 	} catch (const char* exception) {
 		cout << "Error, " << exception << endl;
 	}
@@ -48,7 +52,7 @@ char* get_device_name(const char *device)
 {
   char *device_name;
 
-  char *error_buffer;
+  char error_buffer[PCAP_ERRBUF_SIZE];
 
   if (device == NULL)
   {
@@ -71,23 +75,32 @@ char* get_device_name(const char *device)
 
 pcap_t* create_session(const char *device)
 {
-	int buffer_size = BUFSIZ;
+	int buffer_size = SNAP_LEN;
 	int promisc = 1;
 	int to_ms = 1000;
-	char *error_buffer;
+	char error_buffer[PCAP_ERRBUF_SIZE];
 
-  struct bpf_program fp;		/* The compiled filter expression */
-  char filter_exp[] = "port 23";	/* The filter expression */
-  bpf_u_int32 mask;		/* The netmask of our sniffing device */
-  bpf_u_int32 net;		/* The IP of our sniffing device */
+  struct bpf_program fp; // The compiled filter expression
+  char filter_exp[] = "port 23";  // The filter expression
+  bpf_u_int32 mask; // The netmask of our sniffing device
+  bpf_u_int32 net;  // The IP of our sniffing device
 
   char *device_name = get_device_name(device);
 
-  fancy_printf("Device Name %s\n", device_name);
-  fancy_printf("Net %s\n", net);
-  fancy_printf("Mask %s\n", mask);
+  // get network number and mask associated with capture device
+	if (pcap_lookupnet(device, &net, &mask, error_buffer) == -1)
+  {
+		printf("Couldn't get netmask for device %s: %s\n", device, error_buffer);
 
-  if(device_name == NULL)
+		net = 0;
+
+		mask = 0;
+	}
+
+  fancy_printf("Device: %s\n", device_name);
+	fancy_printf("Filter expression: %s\n", filter_exp);
+
+  if (device_name == NULL)
   {
     throw "Error, could not get device name";
   }
@@ -122,11 +135,9 @@ pcap_t* create_session(const char *device)
 	return session;
 }
 
-void sniff_session(pcap_t *session)
+void sniff_session(pcap_t *session, int num_packets)
 {
 	struct pcap_pkthdr header;	// The header that pcap gives us
-	const u_char *packet;		// The actual packet
-  int num_packets = 10; //number of packets to capture
 
 	if (session == NULL)
 	{
@@ -134,11 +145,20 @@ void sniff_session(pcap_t *session)
 	}
 
   pcap_loop(session, num_packets, on_packet, NULL);
+
+  return;
 }
 
 void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
-  char errbuf[PCAP_ERRBUF_SIZE];		/* error buffer */
+  static int count = 1; //packet counter
+  char errbuf[PCAP_ERRBUF_SIZE]; //error buffer
+
+  printf("\nPacket number %d:\n", count);
+
+  count++;
+
+  return;
 }
 
 void fancy_printf(char* fmt, ...)
