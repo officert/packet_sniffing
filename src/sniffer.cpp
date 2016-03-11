@@ -12,6 +12,7 @@ void log(const char *message);
 pcap_t* create_session(const char *device);
 void sniff_session(pcap_t *session);
 void fancy_printf(char* fmt, ...);
+void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 
 void Sniffer::sniff(const char *device)
 {
@@ -37,6 +38,8 @@ void Sniffer::sniff(const char *device)
 	} catch (const char* exception) {
 		cout << "Error, " << exception << endl;
 	}
+
+	pcap_close(session_handle);
 
   return;
 }
@@ -121,20 +124,21 @@ pcap_t* create_session(const char *device)
 
 void sniff_session(pcap_t *session)
 {
-	struct pcap_pkthdr header;	/* The header that pcap gives us */
-	const u_char *packet;		/* The actual packet */
+	struct pcap_pkthdr header;	// The header that pcap gives us
+	const u_char *packet;		// The actual packet
+  int num_packets = 10; //number of packets to capture
 
 	if (session == NULL)
 	{
 		throw "Error, session cannot be null";
 	}
 
-	// grab a packet
-	packet = pcap_next(session, &header);
+  pcap_loop(session, num_packets, on_packet, NULL);
+}
 
-	fancy_printf("Jacked a packet with length of [%d]\n", header.len);
-
-	pcap_close(session);
+void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
+{
+  char errbuf[PCAP_ERRBUF_SIZE];		/* error buffer */
 }
 
 void fancy_printf(char* fmt, ...)
