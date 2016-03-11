@@ -34,7 +34,7 @@ void Sniffer::sniff(const char *device, const int num_packets)
 		return;
 	}
 
-	printf((char *)"Number of packets: %d\n", num_packets);
+	printf("Number of packets to capture: %d\n", num_packets);
 
 	if (session_handle == NULL)
 	{
@@ -74,9 +74,6 @@ char* get_device_name(const char *device)
 pcap_t* create_session(const char *device)
 {
   pcap_t* session;
-	int buffer_size = SNAP_LEN;
-	int promisc = 1;
-	int to_ms = 1000;
 	char error_buffer[PCAP_ERRBUF_SIZE];
 
   struct bpf_program fp; // The compiled filter expression
@@ -85,6 +82,11 @@ pcap_t* create_session(const char *device)
   bpf_u_int32 net;  // The IP of our sniffing device
 
   char *device_name = get_device_name(device);
+
+  if (device_name == NULL)
+  {
+    throw "Error, could not get device name";
+  }
 
   // get network number and mask associated with capture device
 	if (pcap_lookupnet(device, &net, &mask, error_buffer) == -1)
@@ -96,17 +98,12 @@ pcap_t* create_session(const char *device)
 		mask = 0;
 	}
 
-  printf((char *)"Device: %s\n", device_name);
-	printf((char *)"Filter expression: %s\n", filter_exp);
-	printf((char *)"Net: %s\n", net);
-	printf((char *)"Mask: %s\n", mask);
+  printf("Device: %s\n", device_name);
+	printf("Filter expression: %s\n", filter_exp);
+	printf("Net: %s\n", net);
+	printf("Mask: %s\n", mask);
 
-  if (device_name == NULL)
-  {
-    throw "Error, could not get device name";
-  }
-
-	session = pcap_open_live(device_name, buffer_size, promisc, to_ms, error_buffer);
+	session = pcap_open_live(device_name, SNAP_LEN, 1, 1000, error_buffer);
 
 	if (session == NULL)
 	{
@@ -115,21 +112,26 @@ pcap_t* create_session(const char *device)
 		throw "Error opening session to device";
 	}
 
-	//create and compile a filter for only packets on port 23
-	if (pcap_compile(session, &fp, filter_exp, 0, net) == -1)
-  {
-		fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(session));
-
-		throw "Couldn't parse filter %s: %s\n", pcap_geterr(session);
-	}
-
-	//set the filter to actually apply it to our current session
-	if (pcap_setfilter(session, &fp) == -1)
-  {
-		fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(session));
-
-		throw "Couldn't install filter %s: %s\n", pcap_geterr(session);
-	}
+  // if (pcap_datalink(session) != DLT_EN10MB) {
+  //   fprintf(stderr, "%s is not an Ethernet\n", device);
+	// 	throw "Device is not an Ethernet device";
+	// }
+  //
+	// //create and compile a filter for only packets on port 23
+	// if (pcap_compile(session, &fp, filter_exp, 0, net) == -1)
+  // {
+	// 	fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(session));
+  //
+	// 	throw "Couldn't parse filter";
+	// }
+  //
+	// //set the filter to actually apply it to our current session
+	// if (pcap_setfilter(session, &fp) == -1)
+  // {
+	// 	fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(session));
+  //
+	// 	throw "Couldn't install filter";
+	// }
 
 	return session;
 }
