@@ -148,37 +148,39 @@ void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 {
 	static int count = 1; //packet counter
 
-	const struct sniff_ip *ip; /* The IP header */
 	const struct sniff_ethernet *ethernet; /* The Ethernet header */
-	const struct sniff_tcp *tcp; /* The TCP header */
-	const u_char *payload; /* Packet payload */
-	int size_payload;
+	const struct sniff_ip *ip; /* The IP header */
+	// const struct sniff_tcp *tcp; /* The TCP header */
+	// const u_char *payload; /* Packet payload */
+	// int size_payload;
 
-	u_int size_ip;
-	u_int size_tcp;
+	//u_int size_ip;
+	// u_int size_tcp;
 
 	ethernet = (struct sniff_ethernet*)(packet);
-	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
 
-	//determine protocol
-	switch(ip->ip_p) {
-	case IPPROTO_TCP:
-		printf("   Protocol: TCP\n");
-		break;
-	case IPPROTO_UDP:
-		printf("   Protocol: UDP\n");
-		return;
-	case IPPROTO_ICMP:
-		printf("   Protocol: ICMP\n");
-		return;
-	case IPPROTO_IP:
-		printf("   Protocol: IP\n");
-		return;
-	default:
-		printf("   Protocol: unknown\n");
-		return;
-	}
+	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+
+	// tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
+	//
+	// //determine protocol
+	// switch(ip->ip_p) {
+	// case IPPROTO_TCP:
+	// 	printf("   Protocol: TCP\n");
+	// 	break;
+	// case IPPROTO_UDP:
+	// 	printf("   Protocol: UDP\n");
+	// 	return;
+	// case IPPROTO_ICMP:
+	// 	printf("   Protocol: ICMP\n");
+	// 	return;
+	// case IPPROTO_IP:
+	// 	printf("   Protocol: IP\n");
+	// 	return;
+	// default:
+	// 	printf("   Protocol: unknown\n");
+	// 	return;
+	// }
 
 	printf("\nPacket number %d:\n", count);
 
@@ -187,6 +189,8 @@ void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 	//print source and destination IP addresses
 	printf("       From: %s\n", inet_ntoa(ip->ip_src));
 	printf("         To: %s\n", inet_ntoa(ip->ip_dst));
+
+	// ------------------------------------------------------------ //
 
 	/*
 	 *  OK, this packet is TCP.
