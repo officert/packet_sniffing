@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
 	Sniffer sniffer;
 
-	sniffer.sniff(device, 100);
+	sniffer.sniff(device, 10);
 
 	return(0);
 }
