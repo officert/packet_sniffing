@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pcap.h>
 #include <stdio.h>
+#include <net/ethernet.h>
 
 #include "sniffer.h"
 #include "structs.h"
@@ -185,18 +186,23 @@ void on_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 
 	count++;
 
-	/* print ip addresses */
-  printf("       From: %d.%d.%d.%d\n",
-        ip_header->src_address.byte1,
-        ip_header->src_address.byte2,
-        ip_header->src_address.byte3,
-        ip_header->src_address.byte4);
+	/* print mac addresses */
+	printf("       From MAC: %s\n", ether_ntoa((ether_addr *)&ethernet_header->src_address));
 
-  printf("       To: %d.%d.%d.%d\n",
-        ip_header->dest_address.byte1,
-        ip_header->dest_address.byte2,
-        ip_header->dest_address.byte3,
-        ip_header->dest_address.byte4);
+	printf("       To MAC: %s\n", ether_ntoa((ether_addr *)&ethernet_header->dest_address));
+
+	/* print ip addresses */
+	printf("       From: %d.%d.%d.%d\n",
+	       ip_header->src_address.byte1,
+	       ip_header->src_address.byte2,
+	       ip_header->src_address.byte3,
+	       ip_header->src_address.byte4);
+
+	printf("       To: %d.%d.%d.%d\n",
+	       ip_header->dest_address.byte1,
+	       ip_header->dest_address.byte2,
+	       ip_header->dest_address.byte3,
+	       ip_header->dest_address.byte4);
 
 	// ------------------------------------------------------------ //
 
